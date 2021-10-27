@@ -6,9 +6,9 @@ Command-line Application to view and manage the departments, roles, and employee
 Clone the repositry from GitHub and open using Visual Studio Code.
 
 # Usage 
-<!-- [Demo Viedo](https://drive.google.com/file/d/1kR5lw5sJlITELfoM9XzxWWNWmD4t85m_/view?usp=sharing)
+[Demo Video](https://drive.google.com/file/d/1B6xuPmxGCqrWSxBNaq3OBw_qA3c-1uDU/view?usp=sharing)
 
-![alt text](./assets/images/ScreenShot.jpg) -->
+![Employee Tracker](./assets/images/employee-tracker.jpg)
 
 # Credits
 

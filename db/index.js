@@ -1,311 +1,115 @@
-"use strict";
-
-// Get database connection
 const connection = require("./connection");
 
 class DB {
+  // Keeping a reference to the connection on the class in case we need it later
+  constructor(connection) {
+    this.connection = connection;
+  }
 
-    // constructor to initialise connection
-	constructor(connection) {
-		this.connection = connection;
-	}
+  // Find all employees, join with roles and departments to display their roles, salaries, departments, and managers
+  findAllEmployees() {
+    return this.connection.promise().query(
+      "SELECT employee.id, employee.first_name, employee.last_name, role.title, department.name AS department, role.salary, CONCAT(manager.first_name, ' ', manager.last_name) AS manager FROM employee LEFT JOIN role on employee.role_id = role.id LEFT JOIN department on role.department_id = department.id LEFT JOIN employee manager on manager.id = employee.manager_id;"
+    );
+  }
 
-    // View all employees and all employees details by joining employee, role and department tables.
-	viewAllEmployees() {
-		return this.connection.query(
-			`
-            SELECT
-                e1.id AS ID,
-                e1.first_name AS First_Name,
-                e1.last_name AS Last_Name,
-                role.title AS Role,
-                department.name AS Department,
-                CONCAT(e2.first_name, ' ', e2.last_name) AS Manager,
-                role.salary AS Salary
-            FROM
-                employee e1
-            LEFT JOIN
-                role ON e1.role_id = role.id
-            LEFT JOIN
-                employee e2 ON e1.manager_id = e2.id
-		    LEFT JOIN department ON role.department_id = department.id
-		    ORDER BY
-                e1.id;
-        `
-		);
-    }
-    
-    // View all employees by manager and all employees details by joining employee, role and department tables.
-    viewAllEmployeesByManager(){
-        return this.connection.query(
-            `
-            SELECT
-                e1.id AS ID,
-                e1.first_name AS First_Name,
-                e1.last_name AS Last_Name,
-                role.title AS Role,
-                department.name AS Department,
-                CONCAT(e2.first_name, ' ', e2.last_name) AS Manager,
-                role.salary AS Salary
-            FROM
-                employee e1
-            LEFT JOIN
-                role ON e1.role_id = role.id
-            LEFT JOIN
-                employee e2 ON e1.manager_id = e2.id
-		    LEFT JOIN department ON role.department_id = department.id
-		    ORDER BY
-                e1.manager_id;
-            `
-        );
-    }
+  // Find all employees except the given employee id
+  findAllPossibleManagers(employeeId) {
+    return this.connection.promise().query(
+      "SELECT id, first_name, last_name FROM employee WHERE id != ?",
+      employeeId
+    );
+  }
 
-    // View all roles and role's department by joining role and department table
-	viewAllRoles() {
-		return this.connection.query(
-			`
-            SELECT 
-                role.id,
-                role.title AS Title,
-                department.name AS Department
-            FROM 
-                role
-            LEFT JOIN 
-                department ON role.department_id = department.id
-            ORDER BY
-                role.id;
-            `
-		);
-	}
+  // Create a new employee
+  createEmployee(employee) {
+    return this.connection.promise().query("INSERT INTO employee SET ?", employee);
+  }
 
-    // View all departments
-	viewAllDepartments() {
-		return this.connection.query(
-			`
-        SELECT 
-	        id,
-	        name AS Departments 
-        FROM department;
-        `
-		);
-	}
+  // Remove an employee with the given id
+  removeEmployee(employeeId) {
+    return this.connection.promise().query(
+      "DELETE FROM employee WHERE id = ?",
+      employeeId
+    );
+  }
 
-    // // View all employees by department and all employees details by joining employee, role and department tables.
-	viewEmployeesByDepartment() {
-		return this.connection.query(
-            `
-            SELECT
-                e1.id AS ID,
-                e1.first_name AS First_Name,
-                e1.last_name AS Last_Name,
-                role.title AS Role,
-                department.name AS Department,
-                CONCAT(e2.first_name, ' ', e2.last_name) AS Manager,
-                role.salary AS Salary
-            FROM
-                employee e1
-            LEFT JOIN
-                role ON e1.role_id = role.id
-            LEFT JOIN
-                employee e2 ON e1.manager_id = e2.id
-            LEFT JOIN department ON role.department_id = department.id
-            ORDER BY
-                department.name;
-            ` 
-		);
-	}
+  // Update the given employee's role
+  updateEmployeeRole(employeeId, roleId) {
+    return this.connection.promise().query(
+      "UPDATE employee SET role_id = ? WHERE id = ?",
+      [roleId, employeeId]
+    );
+  }
 
-    // Get all departments
-	getDepartments() {
-		try {
-			return this.connection.query(
-				`
-                SELECT 
-                    * 
-                FROM department;
-                `
-			);
-		} catch (err) {
-			if (err) throw err;
-		}
-	}
+  // Update the given employee's manager
+  updateEmployeeManager(employeeId, managerId) {
+    return this.connection.promise().query(
+      "UPDATE employee SET manager_id = ? WHERE id = ?",
+      [managerId, employeeId]
+    );
+  }
 
-    // Get all roles
-	getRoles() {
-		try {
-			return this.connection.query(
-				`
-                SELECT 
-                    * 
-                FROM role;
-                `
-			);
-		} catch (err) {
-			if (err) throw err;
-		}
-	}
+  // Find all roles, join with departments to display the department name
+  findAllRoles() {
+    return this.connection.promise().query(
+      "SELECT role.id, role.title, department.name AS department, role.salary FROM role LEFT JOIN department on role.department_id = department.id;"
+    );
+  }
 
-    // Get all employees
-	getEmployees() {
-		try {
-			return this.connection.query(
-				`
-                SELECT 
-                    * 
-                FROM employee;
-                `
-			);
-		} catch (err) {
-			if (err) throw err;
-		}
-	}
+  // Create a new role
+  createRole(role) {
+    return this.connection.promise().query("INSERT INTO role SET ?", role);
+  }
 
-    // Add Role in role table
-	addRole(title, salary, departnemtId) {
-		try {
-			this.connection.query(
-				"INSERT INTO role SET ?",
-				{
-					title: `${title}`,
-					salary: `${salary}`,
-					department_id: `${departnemtId}`,
-				},
-				function (err, res) {
-					if (err) throw err;
-					console.log(
-						`\nSuccessfully added role with title:${title}, salary:${salary}, departmentId:${departnemtId}`
-					);
-					return res;
-				}
-			);
-		} catch (err) {
-			console.log("Error inserting role : " + err);
-		}
-	}
+  // Remove a role from the db
+  removeRole(roleId) {
+    return this.connection.promise().query("DELETE FROM role WHERE id = ?", roleId);
+  }
 
-    // Add employee in employee table
-	addEmployee(firstName, lastName, roleId, managerId) {
-		try {
-			this.connection.query(
-				"INSERT INTO employee SET ?",
-				{
-					first_name: `${firstName}`,
-					last_name: `${lastName}`,
-					role_id: `${roleId}`,
-					manager_id: `${managerId}`,
-				},
-				function (err, res) {
-					if (err) throw err;
-					console.log(
-						`\nSuccessfully added employee with firstName:${firstName}, lastName:${lastName}, roleId:${roleId}, managerId:{managerId}`
-					);
-					return res;
-				}
-			);
-		} catch (err) {
-			console.log("Error inserting role : " + err);
-		}
-	}
+  // Find all departments
+  findAllDepartments() {
+    return this.connection.promise().query(
+      "SELECT department.id, department.name FROM department;"
+    );
+  }
 
-    // Add department in department table
-	addDepartment(deptName) {
-		try {
-			this.connection.query(
-				"INSERT INTO department SET ?",
-				{
-					name: `${deptName}`,
-				},
-				function (err, res) {
-					if (err) throw err;
-					console.log(
-						`\nSuccessfully added ${deptName} department!`
-					);
-					return res;
-				}
-			);
-		} catch (err) {
-			console.log("Error inserting department : " + err);
-		}
-	}
+  // Find all departments, join with employees and roles and sum up utilized department budget
+  viewDepartmentBudgets() {
+    return this.connection.promise().query(
+      "SELECT department.id, department.name, SUM(role.salary) AS utilized_budget FROM employee LEFT JOIN role on employee.role_id = role.id LEFT JOIN department on role.department_id = department.id GROUP BY department.id, department.name;"
+    );
+  }
 
-    // Update employee role
-	updateEmployeeRole(empId, roleId) {
-		try {
-			// UPDATE employee SET role_id = 4 WHERE id = 4;
-			this.connection.query(
-				"UPDATE employee SET ? Where ?",
-				[
-					{
-						role_id: roleId,
-					},
-					{
-						id: empId,
-					},
-				],
-				function (error) {
-					if (error) throw err;
-					console.log(`\nUpdated employee's role successfully!`);
-				}
-			);
-		} catch (err) {
-			if (err) throw err;
-		}
-	}
+  // Create a new department
+  createDepartment(department) {
+    return this.connection.promise().query("INSERT INTO department SET ?", department);
+  }
 
-    // Update employee manager
-	updateEmployeeManager(empId, managerId) {
-		//UPDATE employee SET manager_id = 2 WHERE id = 3;
-		try {
-			this.connection.query(
-				"UPDATE employee SET ? WHERE ?",
-				[
-					{
-						manager_id: managerId,
-					},
-					{
-						id: empId,
-					},
-				],
-				function (error) {
-					if (error) throw error;
-					console.log(`\nUpdated employee's manager successfully!`);
-				}
-			);
-		} catch (error) {
-			if (error) throw error;
-		}
-    }
-    
-    // Remove employee
-    removeEmployee(empId){
-        // DELETE FROM employee WHERE id = 2;
-        try {
-			this.connection.query(
-				"DELETE FROM employee WHERE ?",
-				[
-					{
-						id: empId,
-					}
-				],
-				function (error) {
-					if (error) throw error;
-					console.log(`\nRemoved employee with id : ${empId} successfully!`);
-				}
-			);
-		} catch (error) {
-			if (error) throw error;
-		}
-    }
+  // Remove a department
+  removeDepartment(departmentId) {
+    return this.connection.promise().query(
+      "DELETE FROM department WHERE id = ?",
+      departmentId
+    );
+  }
 
-    // Close database connection
-	closeConnection() {
-		try {
-			this.connection.end();
-		} catch (error) {
-			console.log("Error closing connection : " + error);
-		}
-	}
+  // Find all employees in a given department, join with roles to display role titles
+  findAllEmployeesByDepartment(departmentId) {
+    return this.connection.promise().query(
+      "SELECT employee.id, employee.first_name, employee.last_name, role.title FROM employee LEFT JOIN role on employee.role_id = role.id LEFT JOIN department department on role.department_id = department.id WHERE department.id = ?;",
+      departmentId
+    );
+  }
+
+  // Find all employees by manager, join with departments and roles to display titles and department names
+  findAllEmployeesByManager(managerId) {
+    return this.connection.promise().query(
+      "SELECT employee.id, employee.first_name, employee.last_name, department.name AS department, role.title FROM employee LEFT JOIN role on role.id = employee.role_id LEFT JOIN department ON department.id = role.department_id WHERE manager_id = ?;",
+      managerId
+    );
+  }
 }
 
-// Create object of DB class and Export that object
 module.exports = new DB(connection);
+  

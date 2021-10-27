@@ -20,7 +20,9 @@
   "dependencies": {
     "asciiart-logo": "^0.2.6",
     "console.table": "^0.10.0",
-    "inquirer": "^0.2.5",
-    "mysql": "^2.18.1"
+    "inquirer": "^8.2.0",
+    "mysql2": "^2.3.2",
+    "prompt": "^1.2.0",
+    "save": "^2.4.0"
   }
 }

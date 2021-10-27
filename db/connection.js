@@ -1,7 +1,7 @@
 'use strict';
 
 const util = require('util');
-const mysql = require('mysql');
+const mysql = require('mysql2');
 
 // Create database connection
 const connection = mysql.createConnection({
@@ -11,10 +11,10 @@ const connection = mysql.createConnection({
     user : 'root',
 
     //password
-    password : 'asdf@123',
+    password : '5447',
 
     // database name to connect with
-    database : 'employee_DB'
+    database : 'employee_db'
 });
 
 // Connect to databse
